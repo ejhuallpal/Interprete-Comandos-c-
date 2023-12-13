@@ -4,11 +4,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #define MAX_INPUT_SIZE 1024
 #define MAX_ARG_SIZE 64
 
-void run_command(char *command);
+void run_command(char *command, char *args[]);
 
 int main() {
     char input[MAX_INPUT_SIZE];
@@ -41,13 +42,13 @@ int main() {
         args[i] = NULL;
 
         // Ejecutar el comando
-        run_command(args[0]);
+        run_command(args[0], args);
     }
 
     return 0;
 }
 
-void run_command(char *command) {
+void run_command(char *command, char *args[]) {
     pid_t pid = fork();
 
     if (pid == -1) {
@@ -55,6 +56,31 @@ void run_command(char *command) {
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
         // Este bloque se ejecuta en el proceso hijo
+
+        // Buscar el símbolo de redirección '>'
+        int i = 0;
+        while (args[i] != NULL) {
+            if (strcmp(args[i], ">") == 0) {
+                // Redirección detectada, abrir el archivo para escritura
+                int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+                if (fd == -1) {
+                    perror("Error al abrir el archivo de salida");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Redirigir la salida estándar al archivo
+                dup2(fd, STDOUT_FILENO);
+
+                // Cerrar el descriptor de archivo después de la redirección
+                close(fd);
+
+                // Eliminar los elementos de redirección de los argumentos
+                args[i] = NULL;
+                break;
+            }
+            i++;
+        }
+
         // Ejecutar el comando
         execvp(command, args);
         
