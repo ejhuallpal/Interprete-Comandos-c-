@@ -8,10 +8,11 @@
 using namespace std;
 
 void executeCommand(const char* command) {
-    const char* redirectSymbol = strchr(command, '>');
+    const char* redirect_out_Symbol = strchr(command, '>');
+    const char* redirect_in_Symbol = strchr(command, '<');
 
-    if (redirectSymbol != nullptr) {
-    	const char* filename = redirectSymbol + 1;
+    if (redirect_out_Symbol != nullptr) {
+    	const char* filename = redirect_out_Symbol + 1;
         int fileDescriptor = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fileDescriptor < 0) {
             perror("error abriendo redireccion de archivo");
@@ -19,10 +20,20 @@ void executeCommand(const char* command) {
         }
         dup2(fileDescriptor, STDOUT_FILENO);
         close(fileDescriptor);
-        system(command);
-    } else {
-        system(command);
+        
+    } else if (redirect_in_Symbol != nullptr){
+    	const char* filename = redirect_in_Symbol + 1;
+    	
+    	int fileDescriptor = open(filename, O_RDONLY);
+    	if (fileDescriptor < 0){
+    		perror("Error al abrir el archivo para redireccionar la entrada");
+    		return;
+    	}
+    	dup2(fileDescriptor, STDIN_FILENO);
+    	close(fileDescriptor);
+        
     }
+    system(command);
 }
 
 int main() {
