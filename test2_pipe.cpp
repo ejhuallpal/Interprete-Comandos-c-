@@ -20,6 +20,7 @@ void executeCommand(const char* command) {
         }
         dup2(fileDescriptor, STDOUT_FILENO);
         close(fileDescriptor);
+        system(command);
         
     } else if (redirect_in_Symbol != nullptr){
     	const char* filename = redirect_in_Symbol + 1;
@@ -31,6 +32,7 @@ void executeCommand(const char* command) {
     	}
     	dup2(fileDescriptor, STDIN_FILENO);
     	close(fileDescriptor);
+        system(command);
         
     }
     system(command);
