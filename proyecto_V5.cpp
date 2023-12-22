@@ -114,6 +114,17 @@ void executePipedCommands(const char* command) {
     }
 }
 
+//Funcion para recononcer el comando "cd"
+void change_directory(const char* command) {
+    char* path = strtok(const_cast<char*>(command), " "); // Obtener el argumento de la ruta
+    path = strtok(NULL, " "); // Obtener el siguiente token
+    if (path != nullptr) {
+    	chdir(path);
+    } else {
+        cerr << "cd: Falta argumento de directorio" <<endl;
+    }
+}
+
 int main() {
     char command[256];
 
@@ -146,6 +157,10 @@ int main() {
         if (!strcmp(command, "salir")) {
             return 0; // Finalizar el programa si se ingresa "salir"
         } else {
+            // Verificar si se ingreso el comando "cd" para efectuar el cambio de directorio
+            if(!strncmp(command, "cd", 2)){
+                change_directory(command);
+            }
             // Verificar si hay pipes en el comando ingresado
             if (strchr(command, '|') != nullptr) { // Si hay símbolo "|", se ejecutan comandos con pipes
                 executePipedCommands(command);
